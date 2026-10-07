@@ -51,6 +51,9 @@ export function postReview(movieId, text, token) {
 export function putVote(movieId, score, token) {
   return apiFetch(`/api/movies/${movieId}/vote`, { method: 'PUT', body: { score }, token });
 }
+export function getMyVote(movieId, token) {
+  return apiFetch(`/api/movies/${movieId}/my-vote`, { token });
+}
 
 // ---------- Wishlist ----------
 export function getWishlist(token) {

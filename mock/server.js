@@ -124,6 +124,19 @@ app.delete('/api/reviews/:reviewId', requireAuth, (req, res) => {
 });
 
 // ---------- คะแนน ----------
+
+app.get('/api/movies/:id/my-vote', requireAuth, (req, res) => {
+  const movieId = Number(req.params.id);
+
+  const existing = db.votes.find(
+    v => v.memberId === req.member.id && v.movieId === movieId
+  );
+
+  res.json({
+    movieId,
+    score: existing ? existing.score : null,
+  });
+});
 app.put('/api/movies/:id/vote', requireAuth, (req, res) => {
   const movieId = Number(req.params.id);
   const score = req.body?.score;

@@ -1,14 +1,56 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import {
+  getWishlist,
+  getMyVote,
+  putVote,
+  addToWishlist,
+  removeFromWishlist
+} from '../api/backend';
 // TODO ขั้นที่ 5 (Lab): import { putVote, addToWishlist, removeFromWishlist } from '../api/backend';
 
 // แถบปุ่มใต้ชื่อหนัง: ให้คะแนน 1 ถึง 10 และปุ่มเพิ่มเข้า wishlist (ต้อง login)
 function MovieActions({ movieId }) {
-  const { isLoggedIn } = useAuth();              // TODO ขั้นที่ 5 (Lab): ดึง token มาด้วย เพื่อส่งให้ putVote / addToWishlist
+  const { isLoggedIn, token } = useAuth();             // TODO ขั้นที่ 5 (Lab): ดึง token มาด้วย เพื่อส่งให้ putVote / addToWishlist
   const [myScore, setMyScore] = useState(null);
   const [inWishlist, setInWishlist] = useState(false);
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+  if (!isLoggedIn || !token) return;
+
+  async function loadWishlist() {
+    try {
+      const data = await getWishlist(token);
+
+      const found = data.items.some(
+        movie => String(movie.id) === String(movieId)
+      );
+
+      setInWishlist(found);
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  loadWishlist();
+}, [movieId, isLoggedIn, token]);
+
+useEffect(() => {
+  if (!isLoggedIn || !token) return;
+
+  async function loadMyVote() {
+    try {
+      const data = await getMyVote(movieId, token);
+      setMyScore(data.score);
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  loadMyVote();
+}, [movieId, isLoggedIn, token]);
 
   if (!isLoggedIn) {
     return (
@@ -19,16 +61,35 @@ function MovieActions({ movieId }) {
   }
 
   async function handleVote(score) {
-    // TODO ขั้นที่ 5 (Lab): await putVote(movieId, score, token) ก่อน แล้วค่อย setMyScore ถ้าพลาดให้ setMessage(err.message)
-    setMyScore(score);                             // ตอนนี้เปลี่ยนแค่บนจอ refresh แล้วหาย เพราะยังไม่ได้ส่งไป server
-    setMessage('คะแนนยังอยู่แค่บนจอ ยังไม่ได้ส่งไป API (ขั้นที่ 5)');
-  }
+  try {
+    setMessage(null);
 
-  async function handleWishlist() {
-    // TODO ขั้นที่ 5 (Lab): ถ้า inWishlist ให้ await removeFromWishlist ไม่งั้น await addToWishlist แล้วค่อยสลับค่า
-    setInWishlist(!inWishlist);
-    setMessage('ยังไม่ได้ส่งไป API (ขั้นที่ 5) เปิดหน้า "อยากดู" จะไม่เจอเรื่องนี้');
+    await putVote(movieId, score, token);
+
+    setMyScore(score);
+    setMessage(`ให้คะแนน ${score}/10 สำเร็จ`);
+  } catch (err) {
+    setMessage(err.message);
   }
+}
+
+ async function handleWishlist() {
+  try {
+    setMessage(null);
+
+    if (inWishlist) {
+      await removeFromWishlist(movieId, token);
+      setInWishlist(false);
+      setMessage('ลบออกจากรายการที่อยากดูแล้ว');
+    } else {
+      await addToWishlist(movieId, token);
+      setInWishlist(true);
+      setMessage('เพิ่มเข้ารายการที่อยากดูแล้ว');
+    }
+  } catch (err) {
+    setMessage(err.message);
+  }
+}
 
   return (
     <div className="mt-4 space-y-3">
