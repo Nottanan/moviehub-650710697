@@ -15,7 +15,7 @@ import Register from './pages/Register';
 import Wishlist from './pages/Wishlist';
 import NotFound from './pages/NotFound';
 import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminMovies from './pages/admin/AdminMovies';
 import AdminMovieForm from './pages/admin/AdminMovieForm';
 import AdminMembers from './pages/admin/AdminMembers';
